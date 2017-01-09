@@ -52,7 +52,7 @@ update msg model =
             ( { model | gameNumber = randomNumber }, Cmd.none )
 
         NewGame ->
-            model ! [ generateRandomNumber, getEntries ]
+            { model | gameNumber = model.gameNumber + 1 } ! [ getEntries ]
 
         NewEntries result ->
             case result of
@@ -194,7 +194,7 @@ view model =
 
 init : ( Model, Cmd Msg )
 init =
-    initialModel ! [ generateRandomNumber, getEntries ]
+    initialModel ! [ getEntries ]
 
 
 main : Program Never Model Msg
