@@ -54,19 +54,21 @@ update msg model =
         NewGame ->
             { model | gameNumber = model.gameNumber + 1 } ! [ getEntries ]
 
-        NewEntries (Ok jsonString) ->
-            let
-                _ =
-                    Debug.log "It worked!" jsonString
-            in
-                ( model, Cmd.none )
+        NewEntries result ->
+            case result of
+                Ok jsonString ->
+                    let
+                        _ =
+                            Debug.log "It worked!" jsonString
+                    in
+                        ( model, Cmd.none )
 
-        NewEntries (Err error) ->
-            let
-                _ =
-                    Debug.log "Oops!" error
-            in
-                ( model, Cmd.none )
+                Err error ->
+                    let
+                        _ =
+                            Debug.log "Oops!" error
+                    in
+                        ( model, Cmd.none )
 
         Mark id ->
             let
