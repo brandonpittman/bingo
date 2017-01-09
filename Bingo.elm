@@ -91,6 +91,18 @@ generateRandomNumber =
     Random.generate NewRandom (Random.int 1 100)
 
 
+entriesUrl : String
+entriesUrl =
+    "http://localhost:3000/random-entries"
+
+
+getEntries : Cmd Msg
+getEntries =
+    entriesUrl
+        |> Http.getString
+        |> Http.send NewEntries
+
+
 
 -- View
 
