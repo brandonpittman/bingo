@@ -5,6 +5,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Random
 import Http
+import Json.Decode as Decode exposing (Decoder, field, succeed)
+import Json.Decode.Pipeline exposing (decode, required, hardcoded, optional)
 
 
 -- Model
@@ -14,6 +16,7 @@ type alias Model =
     { name : String
     , gameNumber : Int
     , entries : List Entry
+    , alertMessage : String
     }
 
 
@@ -42,7 +45,7 @@ type Msg
     | Mark Int
     | Sort
     | NewRandom Int
-    | NewEntries (Result Http.Error String)
+    | NewEntries (Result Http.Error (List Entry))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,12 +59,8 @@ update msg model =
 
         NewEntries result ->
             case result of
-                Ok jsonString ->
-                    let
-                        _ =
-                            Debug.log "It worked!" jsonString
-                    in
-                        ( model, Cmd.none )
+                Ok randomEntries ->
+                    ( { model | entries = List.sortBy .points randomEntries }, Cmd.none )
 
                 Err error ->
                     let
@@ -85,6 +84,24 @@ update msg model =
 
 
 
+-- Decoders
+
+
+entryDecoder : Decoder Entry
+entryDecoder =
+    decode Entry
+        |> Json.Decode.Pipeline.required "id" Decode.int
+        |> Json.Decode.Pipeline.required "phrase" Decode.string
+        |> Json.Decode.Pipeline.required "points" Decode.int
+        |> hardcoded False
+
+
+entryListDecoder : Decoder (List Entry)
+entryListDecoder =
+    Decode.list entryDecoder
+
+
+
 -- Commands
 
 
@@ -100,8 +117,8 @@ entriesUrl =
 
 getEntries : Cmd Msg
 getEntries =
-    entriesUrl
-        |> Http.getString
+    entryListDecoder
+        |> Http.get entriesUrl
         |> Http.send NewEntries
 
 
@@ -185,9 +202,10 @@ view model =
         , viewScore (sumMarkedPoints model.entries)
         , div [ class "button-group" ]
             [ button [ onClick NewGame ] [ text "New Game" ]
-            , button [ onClick Sort ] [ text "Sort" ]
+              -- , button [ onClick Sort ] [ text "Sort" ]
             ]
-        , div [ class "debug" ] [ text (toString model) ]
+          -- Remove this debug box. Don't think I need it anymore.
+          -- , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
 
